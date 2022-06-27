@@ -11,7 +11,7 @@ const Layout = (props) => {
         sx={{
           flexGrow: 1,
           overflow: "auto",
-          height: '100vh',
+          height: 'auto',
           marginTop: '6rem'
         }}
       >
