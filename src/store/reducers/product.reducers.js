@@ -2,7 +2,7 @@ import { CREATE_PRODUCT, DELETE_PRODUCTS } from "../actions/types";
 
 const initialState = [];
 
-const productReducer = (action, product = initialState) => {
+const productReducer = (product = initialState, action) => {
   const { type, payload } = action;
   switch (type) {
     case CREATE_PRODUCT:

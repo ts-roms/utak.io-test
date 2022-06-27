@@ -24,6 +24,8 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
+import { useDispatch } from "react-redux";
+import { createProduct } from "../store/actions/product.actions";
 
 const GridContainer = styled(Grid)(({ thene }) => ({
   padding: "10px",
@@ -80,12 +82,18 @@ const Dashboard = () => {
     in_stock: 0,
   };
 
+  const dispatch = useDispatch();
+
   const [category, setCategory] = useState("");
   const [formValues, setFormValues] = useState(defaultValues);
 
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log("formValues", formValues);
+    
+    dispatch(createProduct(formValues))
+      .then((data) => console.log("data", data))
+      .catch((error) => console.log("error", error));
   };
 
   const handleCategoryChange = (event) => {

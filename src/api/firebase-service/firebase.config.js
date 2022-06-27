@@ -5,4 +5,5 @@ export const firebaseConfig = {
   storageBucket: "utak-io-27661.appspot.com",
   messagingSenderId: "828598272054",
   appId: "1:828598272054:web:3580a53b4e98daff2f5897",
+  databaseURL: 'https://utak-io-27661-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
