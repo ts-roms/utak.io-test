@@ -25,7 +25,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
 import { useDispatch } from "react-redux";
-import { createProduct } from "../store/actions/product.actions";
+import { createProduct, getProducts } from "../store/actions/product.actions";
 
 const GridContainer = styled(Grid)(({ thene }) => ({
   padding: "10px",
@@ -36,19 +36,9 @@ const PaperContainer = styled(Paper)(({ theme }) => ({
   marginTop: "14px",
 }));
 
-const products = [
-  {
-    category: "Goods",
-    name: "Product 1",
-    sizes: "m",
-    price: 11.0,
-    cost: 7.5,
-    inStock: 11,
-  },
-];
-
 const generateProducts = (products) => {
-  return products.map((product, key) => {
+  console.log('PODSA', products)
+  return products?.map((data, key) => {
     return (
       <ListItem
         key={key}
@@ -64,8 +54,8 @@ const generateProducts = (products) => {
           </Avatar>
         </ListItemAvatar>
         <ListItemText
-          primary={`Product name: ${product.name}`}
-          secondary={`Price: ${product.price}`}
+          primary={`Product name: ${data.product.name}`}
+          secondary={`Price: ${data.product.price}`}
         />
       </ListItem>
     );
@@ -86,13 +76,19 @@ const Dashboard = () => {
 
   const [category, setCategory] = useState("");
   const [formValues, setFormValues] = useState(defaultValues);
+  const [products, setProducts] = useState([])
+  const [productData, setData] = useState([])
+
+  useState(() => {
+    dispatch(getProducts())
+    .then((data) => setProducts(data))
+    .catch((error) => console.log('ERRPR', error))
+  }, [products, productData])
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("formValues", formValues);
-    
     dispatch(createProduct(formValues))
-      .then((data) => console.log("data", data))
+      .then((data) => setData(data))
       .catch((error) => console.log("error", error));
   };
 
