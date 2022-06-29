@@ -25,7 +25,13 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
 import { useDispatch } from "react-redux";
-import { createProduct, getProducts } from "../store/actions/product.actions";
+import {
+  createProduct,
+  getProducts,
+  removeProduct,
+  updateProduct,
+  removeProducts
+} from "../store/actions/product.actions";
 
 const GridContainer = styled(Grid)(({ thene }) => ({
   padding: "10px",
@@ -36,31 +42,13 @@ const PaperContainer = styled(Paper)(({ theme }) => ({
   marginTop: "14px",
 }));
 
-const generateProducts = (products) => {
-  console.log('PODSA', products)
-  return products?.map((data, key) => {
-    return (
-      <ListItem
-        key={key}
-        secondaryAction={
-          <IconButton edge="end" aria-label="delete">
-            <DeleteIcon />
-          </IconButton>
-        }
-      >
-        <ListItemAvatar>
-          <Avatar>
-            <FolderIcon />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText
-          primary={`Product name: ${data.product.name}`}
-          secondary={`Price: ${data.product.price}`}
-        />
-      </ListItem>
-    );
-  });
-};
+const StyledList = styled(List)(({ theme }) => ({
+  minHeight: "45vh",
+}));
+
+const StyledListItem = styled(ListItem)(({ theme}) => ({
+  cursor: 'pointer'
+}))
 
 const Dashboard = () => {
   const defaultValues = {
@@ -76,20 +64,36 @@ const Dashboard = () => {
 
   const [category, setCategory] = useState("");
   const [formValues, setFormValues] = useState(defaultValues);
-  const [products, setProducts] = useState([])
-  const [productData, setData] = useState([])
+  const [products, setProducts] = useState([]);
+  const [productData, setData] = useState([]);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [productId, setProductId] = useState("");
 
   useState(() => {
     dispatch(getProducts())
-    .then((data) => setProducts(data))
-    .catch((error) => console.log('ERRPR', error))
-  }, [products, productData])
+      .then((data) => setProducts(data))
+      .catch((error) => console.log("ERRPR", error));
+  }, [productData]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
     dispatch(createProduct(formValues))
-      .then((data) => setData(data))
+      .then((data) => {
+        setData(data);
+        handleResetForm();
+      })
       .catch((error) => console.log("error", error));
+  };
+
+  const handleRemoveProduct = (e, productId) => {
+    e.preventDefault();
+    dispatch(removeProduct(productId))
+      .then(() => console.log("deleted"))
+      .catch((error) => console.log("error", error));
+  };
+
+  const handleResetForm = () => {
+    setFormValues(defaultValues);
   };
 
   const handleCategoryChange = (event) => {
@@ -109,6 +113,67 @@ const Dashboard = () => {
     });
   };
 
+  const handleEditProduct = (event, product, productId) => {
+    event.preventDefault();
+    setFormValues(product);
+    setProductId(productId);
+    setIsUpdate(true);
+  };
+
+  const handleUpdate = (event) => {
+    event.preventDefault();
+    dispatch(updateProduct(formValues, productId))
+      .then(() => {
+        setFormValues(defaultValues);
+        setIsUpdate(false);
+      })
+      .catch((error) => console.log("error", error));
+  };
+
+  const generateProducts = (products) => {
+    const keys = Object.keys(products);
+    return Object.values(products).map((product, key) => {
+      return (
+        <StyledListItem
+          key={key}
+          secondaryAction={
+            <IconButton
+              edge="end"
+              aria-label="delete"
+              onClick={(e) => handleRemoveProduct(e, keys[key])}
+            >
+              <DeleteIcon />
+            </IconButton>
+          }
+          onClick={(e) => {
+            handleEditProduct(e, product, keys[key]);
+          }}
+        >
+          <ListItemAvatar>
+            <Avatar>
+              <FolderIcon />
+            </Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary={`Product name: ${product.name}`}
+            secondary={`Price: ${product.price}`}
+          />
+        </StyledListItem>
+      );
+    });
+  };
+
+  const handleRemoveAll = (event) => {
+    event.preventDefault()
+    console.log('CALLED')
+    dispatch(removeProducts())
+    .then(() => {
+      setFormValues(defaultValues);
+      setIsUpdate(false);
+    })
+    .catch((error) => console.log("error", error));
+  }
+
   return (
     <React.Fragment>
       <Typography variant="h5" component="h1">
@@ -120,7 +185,12 @@ const Dashboard = () => {
             <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
               Products
             </Typography>
-            <List>{generateProducts(products)}</List>
+            <StyledList>
+              {generateProducts(products)}
+              <Button variant="outlined" startIcon={<DeleteIcon  />} onClick={handleRemoveAll}>
+                Delete All
+              </Button>
+            </StyledList>
           </Grid>
           <Grid item md={6}>
             <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
@@ -133,7 +203,7 @@ const Dashboard = () => {
               }}
               noValidate
               autoComplete="off"
-              onSubmit={handleSubmit}
+              onSubmit={!isUpdate ? handleSubmit : handleUpdate}
             >
               <Grid container spaceing={2}>
                 <Grid item xs={12}>
@@ -245,7 +315,12 @@ const Dashboard = () => {
                 </Grid>
                 <Grid item xs={12}>
                   <Stack spacing={2} direction="row" sx={{ mt: 4 }}>
-                    <Button variant="outlined" color="secondary" fullWidth>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      fullWidth
+                      onClick={handleResetForm}
+                    >
                       Clear
                     </Button>
                     <Button variant="contained" type="submit" fullWidth>
