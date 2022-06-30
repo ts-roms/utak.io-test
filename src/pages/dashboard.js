@@ -30,7 +30,7 @@ import {
   getProducts,
   removeProduct,
   updateProduct,
-  removeProducts
+  removeProducts,
 } from "../store/actions/product.actions";
 
 const GridContainer = styled(Grid)(({ thene }) => ({
@@ -44,11 +44,20 @@ const PaperContainer = styled(Paper)(({ theme }) => ({
 
 const StyledList = styled(List)(({ theme }) => ({
   minHeight: "45vh",
+  border: "1px solid #ccc",
+  borderRadius: "10px",
 }));
 
-const StyledListItem = styled(ListItem)(({ theme}) => ({
-  cursor: 'pointer'
-}))
+const StyledListItem = styled(ListItem)(({ theme }) => ({
+  cursor: "pointer",
+  "&:hover": {
+    background: "rgb(182 227 245 / 87%)",
+  },
+}));
+
+const StyledDeleteAllButton = styled(Button)(({ theme }) => ({
+  margin: "18px 0 6px 17px",
+}));
 
 const Dashboard = () => {
   const defaultValues = {
@@ -65,48 +74,50 @@ const Dashboard = () => {
   const [category, setCategory] = useState("");
   const [formValues, setFormValues] = useState(defaultValues);
   const [products, setProducts] = useState([]);
-  const [productData, setData] = useState([]);
   const [isUpdate, setIsUpdate] = useState(false);
   const [productId, setProductId] = useState("");
+  const [error, setError] = useState(null);
 
   useState(() => {
     dispatch(getProducts())
       .then((data) => setProducts(data))
-      .catch((error) => console.log("ERRPR", error));
-  }, [productData]);
+      .catch((error) => console.log("Catch Exception: ", error));
+  }, [products]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (JSON.stringify(defaultValues) === JSON.stringify(formValues)) {
+      setError("Fields with Asterisk is required");
+      return;
+    } else {
+      setError(null);
+    }
+
     dispatch(createProduct(formValues))
-      .then((data) => {
-        setData(data);
+      .then(() => {
+        dispatch(getProducts())
+          .then((data) => setProducts(data))
+          .catch((error) => console.log("Catch Exception: ", error));
         handleResetForm();
       })
-      .catch((error) => console.log("error", error));
+      .catch((error) => console.log("Catch Exception: ", error));
   };
 
   const handleRemoveProduct = (e, productId) => {
     e.preventDefault();
     dispatch(removeProduct(productId))
-      .then(() => console.log("deleted"))
-      .catch((error) => console.log("error", error));
-  };
-
-  const handleResetForm = () => {
-    setFormValues(defaultValues);
+      .then(() => {
+        dispatch(getProducts())
+          .then((data) => setProducts(data))
+          .catch((error) => console.log("Catch Exception: ", error));
+        handleResetForm();
+      })
+      .catch((error) => console.log("Catch Exception: ", error));
   };
 
   const handleCategoryChange = (event) => {
     const { value, name } = event.target;
     setCategory(value);
-    setFormValues({
-      ...formValues,
-      [name]: value,
-    });
-  };
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
     setFormValues({
       ...formValues,
       [name]: value,
@@ -127,7 +138,20 @@ const Dashboard = () => {
         setFormValues(defaultValues);
         setIsUpdate(false);
       })
-      .catch((error) => console.log("error", error));
+      .catch((error) => console.log("Catch Exception: ", error));
+  };
+
+  const handleResetForm = () => {
+    setFormValues(defaultValues);
+    setError(null);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormValues({
+      ...formValues,
+      [name]: value,
+    });
   };
 
   const generateProducts = (products) => {
@@ -164,20 +188,22 @@ const Dashboard = () => {
   };
 
   const handleRemoveAll = (event) => {
-    event.preventDefault()
-    console.log('CALLED')
+    event.preventDefault();
     dispatch(removeProducts())
-    .then(() => {
-      setFormValues(defaultValues);
-      setIsUpdate(false);
-    })
-    .catch((error) => console.log("error", error));
-  }
+      .then(() => {
+        dispatch(getProducts())
+          .then((data) => setProducts(data))
+          .catch((error) => console.log("Catch Exception: ", error));
+        setFormValues(defaultValues);
+        setIsUpdate(false);
+      })
+      .catch((error) => console.log("error", error));
+  };
 
   return (
     <React.Fragment>
       <Typography variant="h5" component="h1">
-        Welcome to Utak.io
+        Welcome to Test Page
       </Typography>
       <PaperContainer elevation={3}>
         <GridContainer container spacing={2}>
@@ -186,19 +212,64 @@ const Dashboard = () => {
               Products
             </Typography>
             <StyledList>
-              {generateProducts(products)}
-              <Button variant="outlined" startIcon={<DeleteIcon  />} onClick={handleRemoveAll}>
-                Delete All
-              </Button>
+              {console.log("products", products)}
+              {products.length || Object.keys(products).length ? (
+                generateProducts(products)
+              ) : (
+                <Typography
+                  variant="p"
+                  component="span"
+                  sx={{
+                    mt: 4,
+                    mb: 2,
+                    display: "flex",
+                    justifyContent: "center",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    color: "#bbbaba",
+                  }}
+                >
+                  No product available
+                </Typography>
+              )}
+              {products.length || Object.keys(products).length ? (
+                <StyledDeleteAllButton
+                  variant="outlined"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleRemoveAll}
+                >
+                  Delete All
+                </StyledDeleteAllButton>
+              ) : null}
             </StyledList>
           </Grid>
           <Grid item md={6}>
             <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
               Product Entry Form
             </Typography>
+            {error ? (
+              <Typography
+                sx={{
+                  mt: 4,
+                  mb: 2,
+                  display: "flex",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  color: "#f00",
+                }}
+                variant="p"
+                component="span"
+              >
+                {error}
+              </Typography>
+            ) : null}
             <Box
               component="form"
               sx={{
+                border: "1px solid #ccc",
+                borderRadius: "10px",
+                padding: "10px",
                 "& .MuiTextField-root": { mt: 2 },
               }}
               noValidate
@@ -273,7 +344,11 @@ const Dashboard = () => {
                     <TextField
                       variant="outlined"
                       label="Price"
-                      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                      inputProps={{
+                        inputMode: "numeric",
+                        pattern: "[0-9]*",
+                        min: "0",
+                      }}
                       type="number"
                       id="price"
                       name="price"
@@ -288,7 +363,11 @@ const Dashboard = () => {
                     <TextField
                       variant="outlined"
                       label="Cost"
-                      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                      inputProps={{
+                        inputMode: "numeric",
+                        pattern: "[0-9]*",
+                        min: "0",
+                      }}
                       type="number"
                       id="cost"
                       name="cost"
@@ -303,7 +382,11 @@ const Dashboard = () => {
                     <TextField
                       variant="outlined"
                       label="In Stock"
-                      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                      inputProps={{
+                        inputMode: "numeric",
+                        pattern: "[0-9]*",
+                        min: "0",
+                      }}
                       type="number"
                       id="in_stock"
                       name="in_stock"

@@ -11,8 +11,8 @@ const Layout = (props) => {
         sx={{
           flexGrow: 1,
           overflow: "auto",
-          height: 'auto',
-          marginTop: '6rem'
+          height: "auto",
+          marginTop: "6rem",
         }}
       >
         <Container maxWidth="lg">{props.children}</Container>

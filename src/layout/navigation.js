@@ -19,12 +19,12 @@ const Navigation = () => {
         >
           <MenuIcon />
         </IconButton>{" "}
-        Utak.io
+        Test Page
       </Toolbar>
     );
   };
 
-  return <AppBarNav>{AppToolbar()}</AppBarNav>
+  return <AppBarNav>{AppToolbar()}</AppBarNav>;
 };
 
 export default Navigation;
